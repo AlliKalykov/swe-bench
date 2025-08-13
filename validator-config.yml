@@ -1,0 +1,76 @@
+# SWE-bench Data Point Validator Configuration
+# This file defines validation rules and harness settings
+
+validation_rules:
+  # Required fields that must be present in every data point
+  required_fields:
+    - "repo"
+    - "instance_id" 
+    - "base_commit"
+    - "patch"
+    - "FAIL_TO_PASS"
+    - "PASS_TO_PASS"
+  
+  # Repository format validation
+  repo_format: "owner/repo"  # Must contain forward slash
+  
+  # Git commit validation
+  min_commit_length: 7  # Minimum SHA length
+  
+  # Patch format validation
+  patch_must_start_with: "diff --git"
+  
+  # Test arrays validation
+  allow_empty_test_arrays: true  # FAIL_TO_PASS and PASS_TO_PASS can be empty
+  
+  # Optional fields that are validated if present
+  optional_fields:
+    - "test_patch"
+    - "problem_statement"
+    - "hints_text"
+    - "created_at"
+    - "version"
+    - "environment_setup_commit"
+    - "_download_metadata"
+
+# SWE-bench harness execution settings
+harness_settings:
+  # Default values for harness execution
+  max_workers: 1
+  timeout_seconds: 1800  # 30 minutes
+  namespace: null  # Set to empty string '' for ARM/Mac M-series
+  dataset_name_default: "SWE-bench/SWE-bench"
+  
+  # Working directories
+  predictions_dir: ".validator_work"
+  logs_dir: "logs"
+  evaluation_results_dir: "evaluation_results"
+  
+  # Run ID format for harness
+  run_id_prefix: "validate"
+  run_id_suffix: "gold"
+
+# Output and logging settings
+output_settings:
+  # Verbose output control
+  show_log_structure: true
+  show_evaluation_results: true
+  
+  # CI/CD integration
+  tail_lines: 200  # Number of lines to show from harness output
+  
+  # Artifact paths for GitHub Actions
+  artifact_paths:
+    - "logs/build_images"
+    - "logs/run_evaluation" 
+    - "evaluation_results"
+
+# Docker settings (for advanced users)
+docker_settings:
+  # Force local builds on ARM architecture
+  force_local_builds_on_arm: true
+  
+  # Resource limits
+  recommended_free_disk_gb: 120
+  recommended_max_workers_ratio: 0.75  # of available CPU cores
+  max_workers_cap: 24

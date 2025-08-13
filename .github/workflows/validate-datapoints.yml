@@ -1,0 +1,74 @@
+# GitHub Actions workflow to validate changed SWE-bench datapoints.
+# Note: This is a placeholder workflow structure without secrets or external tokens.
+
+name: SWE-bench Validation
+
+on:
+  push:
+    paths:
+      - 'data_points/**'
+  pull_request:
+    paths:
+      - 'data_points/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Sync dependencies
+        run: uv sync
+
+      - name: Determine changed datapoints
+        id: changed
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            head="${{ github.event.pull_request.head.sha }}"
+          else
+            base="${{ github.event.before }}"
+            head="${{ github.event.after }}"
+          fi
+          files=$(git diff --name-only "$base" "$head" -- 'data_points/*.json' | tr '\n' ' ')
+          echo "files=$files" >> $GITHUB_OUTPUT
+          if [ -z "$files" ]; then
+            echo "No datapoint changes detected."
+          fi
+
+      - name: Skip if no changes
+        if: steps.changed.outputs.files == ''
+        run: echo "No datapoint changes, skipping validation."
+
+      - name: Run validator
+        if: steps.changed.outputs.files != ''
+        run: |
+          uv run python -m swe_bench_validator ${{ steps.changed.outputs.files }} --max-workers 1 --timeout-seconds 1800
+
+      - name: Upload evaluation artifacts (if exist)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: swebench-logs
+          path: |
+            logs/build_images
+            logs/run_evaluation
+            evaluation_results
+          if-no-files-found: ignore
+
+

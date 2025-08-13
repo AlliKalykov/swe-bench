@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv
+venv/
+env/
+pip-wheel-metadata/
+
+# UV
+.uv/
+
+# SWE-bench evaluation outputs
+logs/
+evaluation_results/
+.validator_work/
+
+# Docker
+**/.docker-cache/
+**/.buildx-cache/
+
+# OS
+.DS_Store
+
+
